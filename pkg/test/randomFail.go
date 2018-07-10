@@ -10,22 +10,64 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	// "github.com/netsys/triggers2/kubehandler/pkg/utils"
 	// "github.com/netsys/triggers2/kubehandler/pkg/state"
-	"k8s.io/client-go/kubernetes"
-	"github.com/op/go-logging"
 )
 
-// The controller object holds the state, timeline, queue of incoming events,
-// and list of triggers to follow.
-type Controller struct {
-	Client			*kubernetes.Clientset
-	Logger			*logging.Logger
+func (c *Controller) printNodes() {
+	c.Logger.Infof("##################");
+	c.Logger.Infof("#................#");
+	c.Logger.Infof("#......NODE......#");
+	c.Logger.Infof("#................#");
+	c.Logger.Infof("##################");
+	nodes, nodeGetErr := c.Client.CoreV1().Nodes().List(metav1.ListOptions{});
+	if (nodeGetErr != nil) {
+		c.Logger.Debug(nodeGetErr);
+	}
+	for i, node := range nodes.Items {
+		c.Logger.Infof("========================================");
+		c.Logger.Infof("Node %v\n", i);
+		c.Logger.Infof("%v", node);
+		c.Logger.Infof("========================================");
+	}
+	c.Logger.Infof("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n\n\n");
+	
 }
 
-func (c *Controller) Run() {
+func (c *Controller) printPods() {
+	c.Logger.Infof("##################");
+	c.Logger.Infof("#................#");
+	c.Logger.Infof("##......POD......");
+	c.Logger.Infof("#................#");
+	c.Logger.Infof("##################");
+	pods, err := c.Client.CoreV1().Pods("default").List(metav1.ListOptions{});
+	if (err != nil) {
+		c.Logger.Debug(err);
+	}
+	for i, pod := range pods.Items {
+		c.Logger.Infof("========================================");
+		c.Logger.Infof("Pod %v\n", i);
+		c.Logger.Infof("%v", pod);
+		c.Logger.Infof("========================================");
+	}
+	c.Logger.Infof("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n\n\n");
+}
 
-	c.testPodRedeploy()
-
-	// c.timedEnforce(time.Second * 10)
+func (c *Controller) printDeployments() {
+	c.Logger.Infof("##################");
+	c.Logger.Infof("#................#");
+	c.Logger.Infof("##..DEPLOYMENT...#");
+	c.Logger.Infof("#................#");
+	c.Logger.Infof("##################");
+	deployments, err := c.Client.AppsV1beta2().Deployments("default").List(metav1.ListOptions{});
+	if (err != nil) {
+		c.Logger.Debug(err);
+	}
+	for i, dep := range deployments.Items {
+		c.Logger.Infof("========================================");
+		c.Logger.Infof("Deployment %v\n", i);
+		c.Logger.Infof("%v", dep);
+		c.Logger.Infof("========================================");
+	}
+	c.Logger.Infof("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n\n\n");
 }
 
 func (c *Controller) timedEnforce(t time.Duration) {
@@ -38,6 +80,35 @@ func (c *Controller) timedEnforce(t time.Duration) {
 		}
 	}
 }
+
+/**
+func (c *Controller) failAllPods() {
+	nodes, err := c.Client.CoreV1().Nodes().List(metav1.ListOptions{})
+	if err != nil {
+		c.Logger.Debug(err)
+	}
+	for _, n := range nodes.Items {
+		c.failAllPodsInNode(n.Name, n.Namespace)
+	}
+}
+*/
+
+/**
+func (c *Controller) failAllPodsInNode(metaname, namespace string) {
+	forceDeleteOption := metav1.NewDeleteOptions(0)
+	node, nodeGetErr := c.Client.CoreV1().Nodes().Get(metaname, metav1.GetOptions{})
+	if nodeGetErr != nil {
+		c.Logger.Debug(nodeGetErr)
+	}
+	pods, podGetErr := c.Client.CoreV1().Pods("default").List(metav1.ListOptions{})
+	if podGetErr != nil {
+		c.Logger.Debug(podGetErr)
+	}
+	for _, pod := range pods.Items {
+		if pod.
+	}
+} 	
+*/
 
 func (c *Controller) testPodRedeploy() {
 	pods, err := c.Client.CoreV1().Pods("").List(metav1.ListOptions{})
@@ -69,9 +140,6 @@ func (c *Controller) testPodRedeploy() {
 
 		return
 	}
-
-
-
 }
 
 

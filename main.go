@@ -12,11 +12,14 @@ import (
 // Runs the controller and starts the server
 func main() {
 
+	kubeconfig := state.GetKubeConfig();
+
 	utils.InitLogging()
 
 	// Initialise a controller
 	var control = test.Controller{
-		Client: state.GetClientOutOfCluster(),
+		MetClient: state.GetMetricsClientOutOfCluster(kubeconfig),
+		Client: state.GetClientOutOfCluster(kubeconfig),
 		Logger: logging.MustGetLogger("control"),
 	}
 
